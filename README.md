@@ -13,6 +13,7 @@ Flip the switch in one window and it flips in every other copy of the app — co
 - **Embedding Bare in a native macOS app** via [bare-kit](https://github.com/holepunchto/bare-kit). The Bare runtime runs as a _worklet_ — a JavaScript runtime on its own background thread, started and messaged by the native app.
 - **A real peer-to-peer stack on the desktop.** [Hyperswarm](https://github.com/holepunchto/hyperswarm) discovers peers through a distributed hash table and connects them with end-to-end (Noise) encryption — no server, no signalling.
 - **One schema, two runtimes.** `schema/generate.js` defines the wire protocol once and emits a typed [hrpc](https://github.com/holepunchto/hrpc) interface for _both_ the JavaScript backend (via [hrpc](https://github.com/holepunchto/hrpc)) and the Swift UI (via [hrpc-swift](https://github.com/holepunchto/hrpc-swift)). Neither side parses bytes by hand.
+- **A distributed-systems lesson, on purpose.** The shared switch is deliberately naïve — last-writer-wins with no conflict resolution — so the demo can _show_ you where that breaks and point you at the right tool for it ([Autobase](https://github.com/holepunchto/autobase)). See the two-act demo below.
 
 ## Architecture
 
@@ -36,8 +37,6 @@ Prerequisites: macOS + Xcode, [XcodeGen](https://github.com/yonaskolb/XcodeGen) 
 
 ```sh
 make          # install deps, fetch BareKit, generate, bundle, link, build the app
-make run      # launch it
-make run2     # launch a SECOND instance — flip the switch and watch them sync
 ```
 
 `make` runs these steps in order (each is also a separate target):
@@ -54,6 +53,32 @@ make run2     # launch a SECOND instance — flip the switch and watch them sync
 | `build`       | `xcodebuild`                                                              |
 
 Edit the worklet JS and re-run `make pack build`; edit the schema and re-run `make gen pack build`.
+
+## Try it — then watch it break (on purpose)
+
+**Act 1 — it syncs.** Launch two copies:
+
+```sh
+make run    # window 1
+make run2   # window 2
+```
+
+Both start off. Flip the switch in one window and the other follows — instantly, with no server. That is the whole stack working: Hyperswarm found the peer on the DHT, opened a Noise-encrypted connection, and your flip crossed the native↔Bare boundary as a typed `hrpc` call and back.
+
+**Act 2 — now break it.** Quit both, then:
+
+```sh
+make run    # one window — flip it ON while it is alone
+make run2   # NOW launch the second window
+```
+
+The two windows **disagree**: the freshly launched peer's default clobbers the state you set. That is not a bug to file — it is the point. The switch is a shared mutable value with no ordering, so when two peers hold different states there is no way to know whose is "right." Last-writer-wins, and they can diverge.
+
+## The right tool for this: Autobase
+
+Convergent multi-writer state is a solved problem in this ecosystem — it is just a different building block. [**Autobase**](https://github.com/holepunchto/autobase) linearizes each peer's append-only log into one deterministic view, so every peer ends in the same state regardless of join order, concurrent edits, or restarts. A real shared switch — or shared list, or collaborative document — would be built on it.
+
+This example deliberately _does not_ use Autobase: it brings storage, replication, and a multi-writer membership model that would bury the thing we are actually showing here — embedding Bare and talking to it over a typed protocol. Treat the divergence above as the motivation for reaching for Autobase next, not as a defect to patch here.
 
 ## How it works
 

@@ -31,6 +31,12 @@ const topic = b4a.alloc(32).fill(ROOM)
 const swarm = new Hyperswarm()
 const peers = new Set()
 
+// INTENTIONALLY NAÏVE: this is a last-writer-wins value with no conflict
+// resolution, so peers can diverge (e.g. flip before another peer joins). That
+// divergence is a teaching point demonstrated in the README, not a bug to fix
+// here — convergent multi-writer state belongs in Autobase
+// (https://github.com/holepunchto/autobase). Please don't "fix" it with a clock
+// or merge strategy; it would defeat the example.
 const state = new Switch({
   broadcast: (on) => {
     for (const connection of peers) connection.write(Switch.encode(on))
