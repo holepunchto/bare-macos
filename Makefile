@@ -11,8 +11,11 @@ all: setup build
 # Everything needed before Xcode can build, in dependency order.
 setup: node_modules framework gen pack link addons project
 
+# Native addon prebuilds ship inside the packages, so postinstall scripts are
+# not needed to build the app. `--ignore-scripts` matches CI (holepunch's
+# node-base action) and keeps installs fast.
 node_modules:
-	npm install
+	npm install --ignore-scripts
 
 # Download the prebuilt macOS BareKit framework (the V8 build) only if it is
 # missing. To refresh after bumping BARE_KIT_VERSION, run `make clean` (or
