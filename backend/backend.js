@@ -44,6 +44,10 @@ const state = new Switch({
 rpc.onSetState(async ({ on }) => ({ on: state.setLocal(on) }))
 
 // --- peer wiring ---
+// The peer protocol is deliberately a single byte: each write is one
+// `Switch.encode(...)` (one byte) and `Switch.decode` takes the last byte of a
+// chunk (latest wins if writes coalesce). Adding a second message type here
+// would break that invariant and need real framing (e.g. bare-rpc).
 swarm.on('connection', (connection) => {
   peers.add(connection)
   console.log('[worklet] peer connected —', peers.size, 'total')

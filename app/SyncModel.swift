@@ -67,8 +67,4 @@ final class SyncModel: ObservableObject {
       }
     }
   }
-
-  func terminate() {
-    worklet.terminate()
-  }
 }
