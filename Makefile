@@ -14,13 +14,17 @@ setup: node_modules framework gen pack link addons project
 node_modules:
 	npm install
 
-# Download the prebuilt macOS BareKit framework (the V8 build).
-framework:
-	@mkdir -p app/frameworks tmp
+# Download the prebuilt macOS BareKit framework (the V8 build) only if it is
+# missing. To refresh after bumping BARE_KIT_VERSION, run `make clean` (or
+# `rm -rf app/frameworks`) first.
+framework: app/frameworks/BareKit.xcframework
+
+app/frameworks/BareKit.xcframework:
+	@mkdir -p tmp
 	gh release download $(BARE_KIT_VERSION) --repo holepunchto/bare-kit \
 		--pattern prebuilds.zip --dir tmp --clobber
 	cd tmp && unzip -oq prebuilds.zip 'darwin/*'
-	rm -rf app/frameworks/BareKit.xcframework
+	@mkdir -p app/frameworks
 	mv tmp/darwin/BareKit.xcframework app/frameworks/
 	rm -rf tmp
 
