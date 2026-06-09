@@ -1,0 +1,7 @@
+node_modules/
+spec/
+swift/schema/
+swift/hrpc/
+app/app.bundle
+app/addons/
+app/frameworks/

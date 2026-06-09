@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+	  Required on macOS for V8's JIT under the Hardened Runtime (notarized /
+	  distributed builds). This is the entitlement that is genuinely meaningful
+	  on macOS — the same key is inert on iOS, where Bare runs V8 jitless.
+	-->
+	<key>com.apple.security.cs.allow-jit</key>
+	<true/>
+</dict>
+</plist>
