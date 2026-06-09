@@ -1,0 +1,36 @@
+name: Integrate
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+permissions:
+  contents: read
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    name: Lint
+    steps:
+      - uses: holepunchto/actions/node-base@v1
+      - run: npm run lint
+  test:
+    runs-on: macos-latest
+    name: Test
+    steps:
+      - uses: holepunchto/actions/bare-base@v1
+      - run: npm test # runs on both Bare and Node
+  build:
+    runs-on: macos-latest
+    name: Build app
+    steps:
+      - uses: holepunchto/actions/node-base@v1
+      - uses: holepunchto/actions/setup-swift@v1
+      - run: swift format lint --strict --recursive app
+      - run: brew install xcodegen
+      # The same one-command flow we document: install, fetch the BareKit
+      # prebuild, generate, bundle, link, generate the project, build.
+      - run: make
+        env:
+          GH_TOKEN: ${{ github.token }}

@@ -33,11 +33,13 @@ struct ContentView: View {
       }
       .font(.callout)
 
-      Text("Launch a second copy of the app — flip the switch in one window and watch the other follow. No server in between.")
-        .font(.caption)
-        .foregroundColor(.secondary)
-        .multilineTextAlignment(.center)
-        .fixedSize(horizontal: false, vertical: true)
+      Text(
+        "Launch a second copy of the app — flip the switch in one window and watch the other follow. No server in between."
+      )
+      .font(.caption)
+      .foregroundColor(.secondary)
+      .multilineTextAlignment(.center)
+      .fixedSize(horizontal: false, vertical: true)
     }
     .padding(24)
     .frame(width: 360)
