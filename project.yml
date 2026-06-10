@@ -1,0 +1,63 @@
+name: App
+include:
+  - app/addons/addons.yml
+packages:
+  BareKit:
+    url: https://github.com/holepunchto/bare-kit-swift
+    branch: main
+  BareRPC:
+    url: https://github.com/holepunchto/bare-rpc-swift
+    branch: main
+  Schema:
+    path: spec/schema
+  HRPC:
+    path: spec/hrpc
+targets:
+  App:
+    type: application
+    platform: macOS
+    deploymentTarget: 13.0
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: to.holepunch.bare.macos
+        SWIFT_VERSION: 5.0
+    info:
+      path: app/Info.plist
+    entitlements:
+      path: app/App.entitlements
+      properties:
+        com.apple.security.cs.allow-jit: true
+    dependencies:
+      - framework: app/frameworks/BareKit.xcframework
+      - package: BareKit
+      - package: BareRPC
+      - package: Schema
+      - package: HRPC
+    sources:
+      - path: app
+        excludes:
+          - frameworks
+          - addons
+          - app.bundle
+          - App.entitlements
+      - path: app/app.bundle
+        optional: true
+    scheme:
+      preActions:
+        - name: Generate
+          script: |
+            PATH="${PATH}" node "${PWD}/schema.js"
+        - name: Link
+          script: |
+            PATH="${PATH}" "${PWD}/node_modules/.bin/bare-link" \
+              --preset darwin \
+              --out ${PWD}/app/addons \
+              ${PWD}
+        - name: Pack
+          script: |
+            PATH="${PATH}" "${PWD}/node_modules/.bin/bare-pack" \
+              --preset darwin \
+              --linked \
+              --base ${PWD} \
+              --out ${PWD}/app/app.bundle \
+              ${PWD}/backend/backend.js

@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "schema": [
+    {
+      "name": "switch-state",
+      "namespace": "sync",
+      "compact": false,
+      "flagsPosition": 0,
+      "fields": [
+        {
+          "name": "on",
+          "required": false,
+          "type": "bool",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "name": "identity",
+      "namespace": "sync",
+      "compact": false,
+      "flagsPosition": -1,
+      "fields": [
+        {
+          "name": "publicKey",
+          "required": true,
+          "type": "string",
+          "version": 1
+        },
+        {
+          "name": "topic",
+          "required": true,
+          "type": "string",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "name": "peers",
+      "namespace": "sync",
+      "compact": false,
+      "flagsPosition": -1,
+      "fields": [
+        {
+          "name": "count",
+          "required": true,
+          "type": "uint",
+          "version": 1
+        }
+      ]
+    }
+  ]
+}

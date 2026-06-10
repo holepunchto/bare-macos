@@ -1,0 +1,10 @@
+build/
+prebuilds/
+node_modules/
+Info.plist
+*.Info.plist
+*.entitlements
+*.bundle
+*.zip
+*.xcodeproj
+coverage/
