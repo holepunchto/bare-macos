@@ -1,10 +1,8 @@
-'use strict'
-
 /* global BareKit */
 
 // The Bare worklet: the "backend" of the app, running on its own thread inside
-// the macOS process. It owns a Hyperswarm node — a real peer-to-peer connection
-// to every other copy of this app on the same topic — and exposes a typed hrpc
+// the macOS process. It owns a Hyperswarm node - a real peer-to-peer connection
+// to every other copy of this app on the same topic - and exposes a typed hrpc
 // interface to the native Swift UI over the BareKit IPC channel.
 //
 // There is no server anywhere. Two instances of the app find each other through
@@ -14,7 +12,6 @@
 // in ../lib/switch.js and is unit-tested; this file is just the wiring.
 
 const Hyperswarm = require('hyperswarm')
-const b4a = require('b4a')
 
 const HRPC = require('../spec/hrpc')
 const Switch = require('../lib/switch')
@@ -28,15 +25,15 @@ const rpc = new HRPC(IPC)
 // DHT. (A real app would let the user pick a room; we keep one fixed room so
 // "launch it twice and watch them sync" just works.)
 const ROOM = 'bare-macos-switch'
-const topic = b4a.alloc(32).fill(ROOM)
+const topic = Buffer.alloc(32).fill(ROOM)
 
 const swarm = new Hyperswarm()
 const peers = new Set()
 
-// INTENTIONALLY NAÏVE: this is a last-writer-wins value with no conflict
+// INTENTIONALLY NAIVE: this is a last-writer-wins value with no conflict
 // resolution, so peers can diverge (e.g. flip before another peer joins). That
 // divergence is a teaching point demonstrated in the README, not a bug to fix
-// here — convergent multi-writer state belongs in Autobase
+// here - convergent multi-writer state belongs in Autobase
 // (https://github.com/holepunchto/autobase). Please don't "fix" it with a clock
 // or merge strategy; it would defeat the example.
 const state = new Switch({
@@ -49,7 +46,7 @@ const state = new Switch({
 // --- UI -> worklet ---
 // The user flipped the switch; apply it locally, push to peers, reply with the
 // authoritative state.
-rpc.onSetState(async ({ on }) => ({ on: state.setLocal(on) }))
+rpc.onSetState(({ on }) => ({ on: state.setLocal(on) }))
 
 // --- peer wiring ---
 // The peer protocol is deliberately a single byte: each write is one
@@ -58,7 +55,7 @@ rpc.onSetState(async ({ on }) => ({ on: state.setLocal(on) }))
 // would break that invariant and need real framing (e.g. bare-rpc).
 swarm.on('connection', (connection) => {
   peers.add(connection)
-  console.log('[worklet] peer connected —', peers.size, 'total')
+  console.log('[worklet] peer connected -', peers.size, 'total')
   announcePeers()
 
   // Bring the newcomer in sync with our current state immediately.
@@ -76,8 +73,8 @@ swarm.join(topic, { server: true, client: true })
 
 // Tell the UI who we are. Sent once; the IPC stream buffers it until the UI's
 // read loop attaches.
-const publicKey = b4a.toString(swarm.keyPair.publicKey, 'hex').slice(0, 8)
-console.log('[worklet] up — key', publicKey, 'topic', ROOM)
+const publicKey = Buffer.from(swarm.keyPair.publicKey).toString('hex').slice(0, 8)
+console.log('[worklet] up - key', publicKey, 'topic', ROOM)
 rpc.info({ publicKey, topic: ROOM })
 
 function announcePeers() {

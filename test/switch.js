@@ -1,5 +1,4 @@
 const test = require('brittle')
-const b4a = require('b4a')
 
 const Switch = require('../lib/switch')
 
@@ -35,11 +34,11 @@ test('applyRemote updates state, notifies the UI, does not re-broadcast', (t) =>
 })
 
 test('decode reads the last byte when chunks coalesce', (t) => {
-  t.is(Switch.decode(b4a.from([0, 1, 0, 1])), true)
-  t.is(Switch.decode(b4a.from([1, 0])), false)
+  t.is(Switch.decode(Buffer.from([0, 1, 0, 1])), true)
+  t.is(Switch.decode(Buffer.from([1, 0])), false)
 })
 
 test('encode produces a single 0/1 byte', (t) => {
-  t.alike(Switch.encode(true), b4a.from([1]))
-  t.alike(Switch.encode(false), b4a.from([0]))
+  t.alike(Switch.encode(true), Buffer.from([1]))
+  t.alike(Switch.encode(false), Buffer.from([0]))
 })

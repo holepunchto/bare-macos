@@ -7,7 +7,7 @@ import HRPC
 //
 // `bare-rpc` is transport-agnostic: it hands us frames to send via the delegate
 // method, and we feed it inbound frames via `hrpc.receive`. It does its own
-// length-framing, so there is no hand-rolled byte parsing here — the whole
+// length-framing, so there is no hand-rolled byte parsing here - the whole
 // reason to use hrpc over raw IPC.
 final class BareTransport: RPCDelegate {
   private let ipc: IPC

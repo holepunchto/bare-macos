@@ -5,7 +5,7 @@ struct ContentView: View {
 
   var body: some View {
     VStack(spacing: 20) {
-      Text("Bare ⇄ macOS")
+      Text("Bare <-> macOS")
         .font(.headline)
 
       Toggle(
@@ -34,7 +34,7 @@ struct ContentView: View {
       .font(.callout)
 
       Text(
-        "Launch a second copy of the app — flip the switch in one window and watch the other follow. No server in between."
+        "Launch a second copy of the app - flip the switch in one window and watch the other follow. No server in between."
       )
       .font(.caption)
       .foregroundColor(.secondary)

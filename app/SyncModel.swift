@@ -11,15 +11,15 @@ import SwiftUI
 final class SyncModel: ObservableObject {
   @Published var on = false
   @Published var peers = 0
-  @Published var publicKey = "…"
-  @Published var topic = "…"
+  @Published var publicKey = "..."
+  @Published var topic = "..."
 
   private let worklet = Worklet()
   private var transport: BareTransport?
   private var rpc: HRPC?
 
   init() {
-    // Boot the P2P node when the app starts — it lives for the app's lifetime,
+    // Boot the P2P node when the app starts - it lives for the app's lifetime,
     // not a single window.
     start()
   }
