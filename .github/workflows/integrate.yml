@@ -10,35 +10,32 @@ permissions:
   contents: read
 jobs:
   lint:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     name: Lint
     steps:
       - uses: holepunchto/actions/node-base@v1
+      - uses: holepunchto/actions/setup-swift@v1
       - run: npm run lint
+      - run: swift format lint --strict --recursive app
   test:
     runs-on: macos-latest
     name: Test
     steps:
       - uses: holepunchto/actions/bare-base@v1
-      - run: npm test # runs on both Bare and Node
+      - run: npm test
   build:
     runs-on: macos-latest
-    name: Build app
+    name: Build
     steps:
       - uses: holepunchto/actions/node-base@v1
       - uses: holepunchto/actions/setup-swift@v1
-      - run: swift format lint --strict --recursive app
       - run: brew install xcodegen
-      - name: Fetch BareKit prebuild
-        run: |
-          gh release download v2.1.3 --repo holepunchto/bare-kit --pattern prebuilds.zip
-          unzip prebuilds.zip 'darwin/*'
-          mkdir -p app/frameworks
-          mv darwin/BareKit.xcframework app/frameworks/
+      - run: |
+          gh release download --repo holepunchto/bare-kit v2.1.3
+          unzip prebuilds.zip "darwin/*" -d prebuilds/
+          mv prebuilds/darwin/BareKit.xcframework app/frameworks/
         env:
           GH_TOKEN: ${{ github.token }}
-      - run: npm run gen # generates the Swift packages xcodegen resolves
+      - run: npm run schema
       - run: xcodegen generate
-      # The build is driven by xcodebuild: scheme pre-actions run bare-link +
-      # bare-pack, then it compiles.
-      - run: xcodebuild -scheme BareSwitch -derivedDataPath build CODE_SIGNING_ALLOWED=NO build
+      - run: xcodebuild -scheme App build CODE_SIGNING_ALLOWED=NO

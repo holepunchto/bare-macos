@@ -2,25 +2,23 @@
   "private": true,
   "name": "bare-macos",
   "version": "1.0.0",
-  "description": "Example of embedding Bare in a native macOS app: a peer-to-peer shared switch",
-  "license": "Apache-2.0",
-  "author": "Holepunch",
+  "description": "Example of embedding Bare in a macOS application",
+  "scripts": {
+    "format": "prettier --write . && lunte --fix",
+    "lint": "prettier --check . && lunte",
+    "test": "brittle-bare --coverage test.js",
+    "schema": "node schema.js"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/holepunchto/bare-macos.git"
   },
-  "scripts": {
-    "test": "npm run test:bare && npm run test:node",
-    "test:bare": "brittle-bare test/all.mjs",
-    "test:node": "brittle-node test/all.mjs",
-    "make:test": "brittle-make-test test/all.mjs test/*.test.js",
-    "gen": "node schema/generate.js",
-    "pack": "bare-pack --preset darwin --linked --out app/app.bundle backend/backend.js",
-    "link": "bare-link --preset darwin --out app/addons .",
-    "addons": "node scripts/write-addons.js",
-    "lint": "prettier . --check",
-    "format": "prettier . --write"
+  "author": "Holepunch",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/holepunchto/bare-macos/issues"
   },
+  "homepage": "https://github.com/holepunchto/bare-macos#readme",
   "dependencies": {
     "b4a": "^1.8.1",
     "hrpc": "^4.3.0",
@@ -33,6 +31,7 @@
     "hrpc-swift": "^0.2.0",
     "hyperschema": "^1.21.0",
     "hyperschema-swift": "^0.3.0",
+    "lunte": "^1.8.0",
     "prettier": "^3.4.2",
     "prettier-config-holepunch": "^2.0.0"
   }

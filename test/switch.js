@@ -1,5 +1,3 @@
-'use strict'
-
 const test = require('brittle')
 const b4a = require('b4a')
 

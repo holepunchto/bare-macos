@@ -20,7 +20,7 @@ const HRPCBuilder = require('hrpc')
 const SwiftHyperschema = require('hyperschema-swift')
 const SwiftHRPC = require('hrpc-swift')
 
-const ROOT = path.join(__dirname, '..')
+const ROOT = __dirname
 
 const JS_SCHEMA_DIR = path.join(ROOT, 'spec', 'schema')
 const JS_HRPC_DIR = path.join(ROOT, 'spec', 'hrpc')

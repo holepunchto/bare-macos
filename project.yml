@@ -1,66 +1,47 @@
-name: BareSwitch
-
-options:
-  bundleIdPrefix: to.holepunch.bare
-  deploymentTarget:
-    macOS: '13.0'
-
-# Lists the native-addon frameworks Xcode should embed. Committed; the framework
-# binaries themselves are gitignored and produced by the Link pre-action below.
-# Regenerate with `npm run link && npm run addons` when dependencies change.
+name: App
 include:
   - app/addons/addons.yml
-
 packages:
-  # The Bare runtime + worklet/IPC bridge.
   BareKit:
     url: https://github.com/holepunchto/bare-kit-swift
     branch: main
-  # The RPC runtime the generated HRPC rides on.
   BareRPC:
     url: https://github.com/holepunchto/bare-rpc-swift
     branch: main
-  # Generated from schema/generate.js (`npm run gen`).
   Schema:
     path: swift/schema
   HRPC:
     path: swift/hrpc
-
 targets:
-  BareSwitch:
+  App:
     type: application
     platform: macOS
+    deploymentTarget: 13.0
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: to.holepunch.bare.macos
-        PRODUCT_NAME: BareSwitch
-        MARKETING_VERSION: '1.0.0'
-        CURRENT_PROJECT_VERSION: '1'
-        GENERATE_INFOPLIST_FILE: YES
-        SWIFT_VERSION: '5'
-        CODE_SIGN_ENTITLEMENTS: app/BareSwitch.entitlements
-        INFOPLIST_KEY_CFBundleDisplayName: Bare Switch
-        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.developer-tools
+        SWIFT_VERSION: 5.0
+    info:
+      path: app/Info.plist
+    entitlements:
+      path: app/App.entitlements
+      properties:
+        com.apple.security.cs.allow-jit: true
+    dependencies:
+      - framework: app/frameworks/BareKit.xcframework
+      - package: BareKit
+      - package: BareRPC
+      - package: Schema
+      - package: HRPC
     sources:
       - path: app
         excludes:
           - frameworks
           - addons
-          - '*.entitlements'
           - app.bundle
+          - App.entitlements
       - path: app/app.bundle
         optional: true
-        buildPhase: resources
-    dependencies:
-      - framework: app/frameworks/BareKit.xcframework
-      - package: BareKit
-      - package: HRPC
-      - package: Schema
-      - package: BareRPC
-    # Re-link native addons and re-pack the worklet JS on every `xcodebuild`, so
-    # the full build is driven by Xcode (no Makefile). The schema is generated
-    # separately via `npm run gen` (it produces the Swift packages above, which
-    # must exist before `xcodegen generate`).
     scheme:
       preActions:
         - name: Link
@@ -72,7 +53,8 @@ targets:
         - name: Pack
           script: |
             PATH="${PATH}" "${PWD}/node_modules/.bin/bare-pack" \
-              --preset darwin --linked \
+              --preset darwin \
+              --linked \
               --base ${PWD} \
               --out ${PWD}/app/app.bundle \
               ${PWD}/backend/backend.js
