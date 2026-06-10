@@ -9,9 +9,9 @@ packages:
     url: https://github.com/holepunchto/bare-rpc-swift
     branch: main
   Schema:
-    path: swift/schema
+    path: spec/schema
   HRPC:
-    path: swift/hrpc
+    path: spec/hrpc
 targets:
   App:
     type: application
@@ -44,6 +44,9 @@ targets:
         optional: true
     scheme:
       preActions:
+        - name: Generate
+          script: |
+            PATH="${PATH}" node "${PWD}/schema.js"
         - name: Link
           script: |
             PATH="${PATH}" "${PWD}/node_modules/.bin/bare-link" \

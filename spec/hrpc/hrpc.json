@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "schema": [
+    {
+      "id": 0,
+      "name": "@sync/set-state",
+      "request": {
+        "name": "@sync/switch-state",
+        "stream": false
+      },
+      "response": {
+        "name": "@sync/switch-state",
+        "stream": false
+      },
+      "version": 1
+    },
+    {
+      "id": 1,
+      "name": "@sync/new-state",
+      "request": {
+        "name": "@sync/switch-state",
+        "stream": false,
+        "send": true
+      },
+      "response": null,
+      "version": 1
+    },
+    {
+      "id": 2,
+      "name": "@sync/peers-changed",
+      "request": {
+        "name": "@sync/peers",
+        "stream": false,
+        "send": true
+      },
+      "response": null,
+      "version": 1
+    },
+    {
+      "id": 3,
+      "name": "@sync/info",
+      "request": {
+        "name": "@sync/identity",
+        "stream": false,
+        "send": true
+      },
+      "response": null,
+      "version": 1
+    }
+  ]
+}
