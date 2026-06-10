@@ -1,5 +1,7 @@
 'use strict'
 
+/* global BareKit */
+
 // The Bare worklet: the "backend" of the app, running on its own thread inside
 // the macOS process. It owns a Hyperswarm node — a real peer-to-peer connection
 // to every other copy of this app on the same topic — and exposes a typed hrpc
