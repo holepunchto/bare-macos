@@ -29,8 +29,16 @@ jobs:
       - uses: holepunchto/actions/setup-swift@v1
       - run: swift format lint --strict --recursive app
       - run: brew install xcodegen
-      # The same one-command flow we document: install, fetch the BareKit
-      # prebuild, generate, bundle, link, generate the project, build.
-      - run: make
+      - name: Fetch BareKit prebuild
+        run: |
+          gh release download v2.1.3 --repo holepunchto/bare-kit --pattern prebuilds.zip
+          unzip prebuilds.zip 'darwin/*'
+          mkdir -p app/frameworks
+          mv darwin/BareKit.xcframework app/frameworks/
         env:
           GH_TOKEN: ${{ github.token }}
+      - run: npm run gen # generates the Swift packages xcodegen resolves
+      - run: xcodegen generate
+      # The build is driven by xcodebuild: scheme pre-actions run bare-link +
+      # bare-pack, then it compiles.
+      - run: xcodebuild -scheme BareSwitch -derivedDataPath build CODE_SIGNING_ALLOWED=NO build

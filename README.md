@@ -35,32 +35,34 @@ The same `schema/generate.js` produces `swift/` (the UI's typed client) and `spe
 
 Prerequisites: macOS + Xcode, [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`), the [GitHub CLI](https://cli.github.com) (`gh`, for the prebuilt framework), and Node.js.
 
+One-time setup:
+
 ```sh
-make          # install deps, fetch BareKit, generate, bundle, link, build the app
+npm install                                   # JS deps + codegen/build tools
+
+# Fetch the prebuilt macOS BareKit framework:
+gh release download v2.1.3 --repo holepunchto/bare-kit --pattern prebuilds.zip
+unzip prebuilds.zip 'darwin/*' && mv darwin/BareKit.xcframework app/frameworks/
+
+npm run gen                                   # one schema → JS (spec/) + Swift (swift/) packages
+xcodegen generate                             # project.yml → BareSwitch.xcodeproj
 ```
 
-`make` runs these steps in order (each is also a separate target):
+Then **the build is driven entirely by `xcodebuild`** — the scheme's pre-actions re-link the native addons (`bare-link`) and re-pack the worklet JS (`bare-pack`) on every build:
 
-| Step          | What it does                                                              |
-| ------------- | ------------------------------------------------------------------------- |
-| `npm install` | JS dependencies and codegen/build tools                                   |
-| `framework`   | downloads the prebuilt macOS `BareKit.xcframework` into `app/frameworks/` |
-| `gen`         | one schema → JS (`spec/`) and Swift (`swift/`) packages                   |
-| `pack`        | bundles the worklet JS (+ deps) into `app/app.bundle`                     |
-| `link`        | resolves native addons (udx-native, sodium-native, …) into `app/addons/`  |
-| `addons`      | derives `app/addons/addons.yml` so Xcode embeds those frameworks          |
-| `project`     | `xcodegen generate` → `BareSwitch.xcodeproj`                              |
-| `build`       | `xcodebuild`                                                              |
+```sh
+xcodebuild -scheme BareSwitch -derivedDataPath build build
+```
 
-Edit the worklet JS and re-run `make pack build`; edit the schema and re-run `make gen pack build`.
+Editing `backend/backend.js` just needs another `xcodebuild`. Editing the schema needs `npm run gen` first (it regenerates the Swift packages that `xcodegen` resolves).
 
 ## Try it — then watch it break (on purpose)
 
-**Act 1 — it syncs.** Launch two copies:
+**Act 1 — it syncs.** Launch two copies of the built app:
 
 ```sh
-make run    # window 1
-make run2   # window 2
+open build/Build/Products/Debug/BareSwitch.app      # window 1
+open -n build/Build/Products/Debug/BareSwitch.app   # window 2 (new instance)
 ```
 
 Both start off. Flip the switch in one window and the other follows — instantly, with no server. That is the whole stack working: Hyperswarm found the peer on the DHT, opened a Noise-encrypted connection, and your flip crossed the native↔Bare boundary as a typed `hrpc` call and back.
@@ -68,8 +70,8 @@ Both start off. Flip the switch in one window and the other follows — instantl
 **Act 2 — now break it.** Quit both, then:
 
 ```sh
-make run    # one window — flip it ON while it is alone
-make run2   # NOW launch the second window
+open build/Build/Products/Debug/BareSwitch.app      # one window — flip it ON while it is alone
+open -n build/Build/Products/Debug/BareSwitch.app   # NOW launch the second window
 ```
 
 The two windows **disagree**: the freshly launched peer's default clobbers the state you set. That is not a bug to file — it is the point. The switch is a shared mutable value with no ordering, so when two peers hold different states there is no way to know whose is "right." Last-writer-wins, and they can diverge.
@@ -93,14 +95,13 @@ schema/generate.js   the protocol, defined once
 backend/backend.js   the worklet: Hyperswarm node + hrpc server
 lib/switch.js        the shared-switch state logic (unit-tested)
 app/                 the SwiftUI app + IPC↔hrpc transport
-project.yml          XcodeGen project spec
-Makefile             clean checkout → running app
-spec/  swift/        generated (gitignored); produced by `make gen`
+project.yml          XcodeGen project spec (incl. Link/Pack build pre-actions)
+spec/  swift/        generated (gitignored); produced by `npm run gen`
 ```
 
 ## Tests
 
-`npm test` runs the worklet's state logic on **both Bare and Node** (`brittle`). The native `make build` is the integration test (the whole stack compiling and linking); launching two instances that discover each other on the DHT is the end-to-end test (`make run` + `make run2`).
+`npm test` runs the worklet's state logic on **both Bare and Node** (`brittle`). The `xcodebuild` build is the integration test (the whole stack compiling and linking); launching two instances that discover each other on the DHT is the end-to-end test.
 
 ## Notes
 
