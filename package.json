@@ -5,9 +5,7 @@
   "description": "Example of embedding Bare in a macOS application",
   "scripts": {
     "format": "prettier --write . && lunte --fix",
-    "lint": "prettier --check . && lunte",
-    "test": "brittle-bare --coverage test.js",
-    "schema": "node schema.js"
+    "lint": "prettier --check . && lunte"
   },
   "repository": {
     "type": "git",
@@ -20,16 +18,11 @@
   },
   "homepage": "https://github.com/holepunchto/bare-macos#readme",
   "dependencies": {
-    "hrpc": "^4.3.0",
-    "hyperswarm": "^4.17.0"
+    "bare-switch-core": "file:../bare-switch-core"
   },
   "devDependencies": {
     "bare-link": "^3.2.2",
     "bare-pack": "^2.1.0",
-    "brittle": "^4.0.2",
-    "hrpc-swift": "^0.2.0",
-    "hyperschema": "^1.21.0",
-    "hyperschema-swift": "^0.3.0",
     "lunte": "^1.8.0",
     "prettier": "^3.4.2",
     "prettier-config-holepunch": "^2.0.0"

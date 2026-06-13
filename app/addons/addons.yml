@@ -8,4 +8,4 @@ targets:
       - framework: bare-type.1.1.0.framework
       - framework: bare-url.2.4.5.framework
       - framework: sodium-native.5.1.0.framework
-      - framework: udx-native.1.19.2.framework
+      - framework: udx-native.1.20.7.framework
