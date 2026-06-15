@@ -17,12 +17,6 @@ jobs:
       - uses: holepunchto/actions/setup-swift@v1
       - run: npm run lint
       - run: swift format lint --strict --recursive app
-  test:
-    runs-on: macos-latest
-    name: Test
-    steps:
-      - uses: holepunchto/actions/bare-base@v1
-      - run: npm test
   build:
     runs-on: macos-latest
     name: Build
@@ -36,6 +30,5 @@ jobs:
           mv prebuilds/darwin/BareKit.xcframework app/frameworks/
         env:
           GH_TOKEN: ${{ github.token }}
-      - run: npm run schema
       - run: xcodegen generate
       - run: xcodebuild -scheme App build CODE_SIGNING_ALLOWED=NO

@@ -12,7 +12,7 @@ Flip the switch in one window and it flips in every other copy of the app - conn
 
 - **Embedding Bare in a native macOS app** via [bare-kit](https://github.com/holepunchto/bare-kit). The Bare runtime runs as a _worklet_ - a JavaScript runtime on its own background thread, started and messaged by the native app.
 - **A real peer-to-peer stack on the desktop.** [Hyperswarm](https://github.com/holepunchto/hyperswarm) discovers peers through a distributed hash table and connects them with end-to-end (Noise) encryption - no server, no signalling.
-- **One schema, two runtimes.** `schema.js` defines the wire protocol once and emits a typed [hrpc](https://github.com/holepunchto/hrpc) interface for _both_ the JavaScript backend and the Swift UI (via [hrpc-swift](https://github.com/holepunchto/hrpc-swift)). Neither side parses bytes by hand. The generated code lives under `spec/` and is committed, so you can read it without running codegen.
+- **One core, shared across platforms.** The worklet, the protocol (`schema.js`), and the generated typed [hrpc](https://github.com/holepunchto/hrpc) bindings (JS + Swift) live in [bare-switch-core](https://github.com/holepunchto/bare-switch-core) and are consumed by this app and by [bare-ios](https://github.com/holepunchto/bare-ios). Neither side parses bytes by hand, and neither shell regenerates code - the core ships the committed bindings.
 - **A distributed-systems lesson, on purpose.** The shared switch is deliberately naive - last-writer-wins with no conflict resolution - so the demo can _show_ you where that breaks and point you at the right tool for it ([Autobase](https://github.com/holepunchto/autobase)). See the two-act demo below.
 
 ## Architecture
@@ -29,7 +29,7 @@ Flip the switch in one window and it flips in every other copy of the app - conn
                                                           |   (found on the DHT)
 ```
 
-`schema.js` generates both the Swift client and the JavaScript server, all under `spec/`. The switch state travels: **toggle -> hrpc `setState` -> worklet -> broadcast to peers -> peers' worklets -> hrpc `newState` -> their UIs.**
+The protocol lives once in [bare-switch-core](https://github.com/holepunchto/bare-switch-core)'s `schema.js`, which generates both the Swift client and the JavaScript server under its `spec/`; this app consumes them. The switch state travels: **toggle -> hrpc `setState` -> worklet -> broadcast to peers -> peers' worklets -> hrpc `newState` -> their UIs.**
 
 ## Quickstart
 
@@ -38,7 +38,7 @@ Prerequisites: macOS + Xcode, [XcodeGen](https://github.com/yonaskolb/XcodeGen) 
 One-time setup:
 
 ```sh
-npm install                                   # JS deps + codegen/build tools
+npm install                                   # deps (incl. bare-switch-core) + build tools
 
 # Fetch the prebuilt macOS BareKit framework:
 gh release download v2.1.3 --repo holepunchto/bare-kit --pattern prebuilds.zip
@@ -48,13 +48,13 @@ mv prebuilds/darwin/BareKit.xcframework app/frameworks/
 xcodegen generate                             # project.yml -> App.xcodeproj
 ```
 
-Then **the build is driven entirely by `xcodebuild`** - the scheme's pre-actions regenerate the schema (`schema.js`), re-link the native addons (`bare-link`), and re-pack the worklet JS (`bare-pack`) on every build:
+Then **the build is driven entirely by `xcodebuild`** - the scheme's pre-actions re-link the native addons (`bare-link`) and re-pack the worklet (`bare-pack`, from `bare-switch-core`'s `backend.js`) on every build:
 
 ```sh
 xcodebuild -scheme App -derivedDataPath build build
 ```
 
-Edit `schema.js` or `backend/backend.js` and just run `xcodebuild` again; the pre-actions pick the changes up. (If a schema edit changes the generated `spec/`, commit the regenerated files.)
+To change the protocol or the worklet, edit [bare-switch-core](https://github.com/holepunchto/bare-switch-core) and rebuild; this app picks up the change through its dependency.
 
 ## Try it - then watch it break (on purpose)
 
@@ -84,24 +84,22 @@ This example deliberately _does not_ use Autobase: it brings storage, replicatio
 
 ## How it works
 
-- **Worklet** (`backend/backend.js`) - runs on the Bare thread. It owns the Hyperswarm node and serves the hrpc interface. The bug-prone bit (local vs. remote changes, no-echo / no-loop) lives in `lib/switch.js` and is unit-tested.
+- **Worklet** (`bare-switch-core`'s `backend.js`) - runs on the Bare thread. It owns the Hyperswarm node and serves the hrpc interface. The bug-prone bit (local vs. remote changes, no-echo / no-loop) lives in the core's `lib/switch.js` and is unit-tested there.
 - **Transport** (`app/BareTransport.swift`) - bridges the generated hrpc engine to the worklet's IPC byte stream. `bare-rpc` does its own framing, so there is no hand-rolled byte parsing.
 - **Model** (`app/SyncModel.swift`) - boots the worklet, wires the typed RPC, and exposes `@Published` state to SwiftUI.
 
 ## Project layout
 
 ```
-schema.js            the protocol, defined once
-backend/backend.js   the worklet: Hyperswarm node + hrpc server
-lib/switch.js        the shared-switch state logic (unit-tested)
 app/                 the SwiftUI app + IPC/hrpc transport
-project.yml          XcodeGen project spec (incl. Generate/Link/Pack pre-actions)
-spec/                generated code (committed): JS server + Swift packages
+project.yml          XcodeGen project spec (incl. Link/Pack pre-actions)
 ```
+
+The worklet, schema, and generated bindings live in [bare-switch-core](https://github.com/holepunchto/bare-switch-core).
 
 ## Tests
 
-`npm test` runs the worklet's state logic on Bare (`brittle-bare --coverage`). The `xcodebuild` build is the integration test (the whole stack compiling and linking); launching two instances that discover each other on the DHT is the end-to-end test.
+The worklet's state logic is unit-tested in [bare-switch-core](https://github.com/holepunchto/bare-switch-core). Here, the `xcodebuild` build is the integration test (the whole stack compiling and linking), and launching two instances that discover each other on the DHT is the end-to-end test.
 
 ## Notes
 
