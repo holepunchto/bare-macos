@@ -1,0 +1,42 @@
+name: CodeQL
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  schedule:
+    - cron: 0 6 * * 1
+permissions:
+  contents: read
+jobs:
+  analyze:
+    runs-on: macos-latest
+    name: Analyze
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: holepunchto/actions/node-base@v1
+      - uses: holepunchto/actions/setup-swift@v1
+      - run: brew install xcodegen
+      - run: |
+          gh release download --repo holepunchto/bare-kit v2.1.3
+          unzip prebuilds.zip "darwin/*" -d prebuilds/
+          mv prebuilds/darwin/BareKit.xcframework app/frameworks/
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - run: xcodegen generate
+      # Autobuild finds nothing here: the project is written by xcodegen and the
+      # Swift packages live under node_modules. Only the compile needs tracing,
+      # and the tracer forces the steps after this one through Rosetta, which
+      # Homebrew refuses in the ARM prefix - so init goes after the setup.
+      - uses: github/codeql-action/init@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9
+        with:
+          languages: swift
+          build-mode: manual
+      - run: xcodebuild -scheme App build CODE_SIGNING_ALLOWED=NO
+      - uses: github/codeql-action/analyze@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9
+        with:
+          category: /language:swift
